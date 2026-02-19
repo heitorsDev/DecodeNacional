@@ -1,10 +1,10 @@
-package org.firstinspires.ftc.teamcode.core.hardware;
+package org.firstinspires.ftc.teamcode.Hardware;
 
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
-
+import org.firstinspires.ftc.teamcode.core.hardware.TauraServo;
 import org.firstinspires.ftc.teamcode.core.controller.PIDFController;
 
 public class PIDServo {
