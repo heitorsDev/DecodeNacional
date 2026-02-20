@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Subsystems.Turret;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -81,6 +82,7 @@ public class Turret extends SubsystemBase {
         telemetry = FtcDashboard.getInstance().getTelemetry();
         Taura1 = new TauraServo(hardwareMap.get(Servo.class, TurretConstants.HMTaura1));
         Taura2 = new TauraServo(hardwareMap.get(Servo.class, TurretConstants.HMTaura2));
+        Taura1.setAnalogFeedbackSensor(hardwareMap.get(AnalogInput.class, TurretConstants.HMEncoder));
         shooter1 = hardwareMap.get(DcMotorEx.class, "shooter1");
         shooter2 = hardwareMap.get(DcMotorEx.class, "shooter2");
     }

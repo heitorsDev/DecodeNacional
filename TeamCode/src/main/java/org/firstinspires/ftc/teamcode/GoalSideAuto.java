@@ -11,6 +11,7 @@ import com.seattlesolvers.solverslib.command.RunCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Commands.Intake.IntakeOn;
 import org.firstinspires.ftc.teamcode.Commands.TransferSequence;
 import org.firstinspires.ftc.teamcode.Field.Sides;
@@ -49,7 +50,21 @@ public class GoalSideAuto extends CommandOpMode {
         intake = new Intake(hardwareMap);
         gate = new Gate(hardwareMap);
         gate.Open();
-        turret.setSide(TurretConstants.SIDES.BLUE);
+        TurretConstants.SIDES side = null;
+
+        telemetry.addLine("Press X for blue side, B for red side: ");
+        while(side==null){
+            if (gamepad1.x){
+                side = TurretConstants.SIDES.BLUE;
+            } else
+            if (gamepad1.b){
+                side = TurretConstants.SIDES.RED;
+            }
+        }
+        telemetry.update();
+
+        PosePersistency.lastSide =side;
+        turret.setSide(side);
         telemetry = FtcDashboard.getInstance().getTelemetry();
         super.reset();
 
@@ -66,6 +81,18 @@ public class GoalSideAuto extends CommandOpMode {
 
         Pose startThirdRow = new Pose(40, 36, Math.toRadians(180));
         Pose endThirdRow   = new Pose(16, 36, Math.toRadians(180));
+
+        if (side== TurretConstants.SIDES.RED){
+            startPose = startPose.mirror();
+            shootingPose = shootingPose.mirror();
+            startFirstRow = startFirstRow.mirror();
+            endFirstRow = endFirstRow.mirror();
+            startSecondRow = startSecondRow.mirror();
+            endSecondRow = endSecondRow.mirror();
+            startThirdRow = startThirdRow.mirror();
+            endThirdRow = endThirdRow.mirror();
+        }
+
 
         follower.setPose(startPose);
 
@@ -180,6 +207,7 @@ public class GoalSideAuto extends CommandOpMode {
 
     @Override
     public void run() {
+        PosePersistency.lastPose = follower.getPose();
         turret.updateBotPose(follower.getPose());
         telemetry.addData("isBusy", follower.isBusy());
         telemetry.addData("Pose", follower.getPose());

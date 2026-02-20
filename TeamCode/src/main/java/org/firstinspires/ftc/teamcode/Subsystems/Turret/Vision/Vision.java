@@ -6,8 +6,6 @@ import com.pedropathing.geometry.Pose;
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.LLResultTypes.FiducialResult;
 
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -16,11 +14,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 import java.util.Optional;
 
-public class VisionSubsystem extends SubsystemBase {
+public class Vision extends SubsystemBase {
 
     private final Limelight3A limelight;
 
-    public VisionSubsystem(HardwareMap hardwareMap) {
+    public Vision(HardwareMap hardwareMap) {
         limelight = hardwareMap.get(
                 Limelight3A.class,
                 VisionConstants.LIMELIGHT_NAME
