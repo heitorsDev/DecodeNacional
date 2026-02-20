@@ -9,11 +9,12 @@ import org.firstinspires.ftc.teamcode.Commands.Intake.IntakeOff;
 import org.firstinspires.ftc.teamcode.Commands.Intake.IntakeOn;
 import org.firstinspires.ftc.teamcode.Subsystems.Gate.Gate;
 import org.firstinspires.ftc.teamcode.Subsystems.Intake.Intake;
+import org.firstinspires.ftc.teamcode.Subsystems.Turret.Turret;
 
 public class TransferSequence extends SequentialCommandGroup {
 
 
-    public TransferSequence(Intake intake, Gate gate){
+    public TransferSequence(Intake intake, Gate gate, Turret turret){
 
 
 

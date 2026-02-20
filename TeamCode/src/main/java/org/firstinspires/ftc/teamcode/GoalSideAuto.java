@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.Field.Sides;
 import org.firstinspires.ftc.teamcode.Subsystems.Gate.Gate;
 import org.firstinspires.ftc.teamcode.Subsystems.Intake.Intake;
 import org.firstinspires.ftc.teamcode.Subsystems.Turret.Turret;
+import org.firstinspires.ftc.teamcode.Subsystems.Turret.TurretConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "Goal Side Auto")
@@ -44,12 +45,11 @@ public class GoalSideAuto extends CommandOpMode {
 
     @Override
     public void initialize() {
-        turret = new Turret(hardwareMap, telemetry);
+        turret = new Turret(hardwareMap);
         intake = new Intake(hardwareMap);
         gate = new Gate(hardwareMap);
-        turret.Reset();
         gate.Open();
-        turret.SetSide(Sides.BLUE);
+        turret.setSide(TurretConstants.SIDES.BLUE);
         telemetry = FtcDashboard.getInstance().getTelemetry();
         super.reset();
 
@@ -180,7 +180,7 @@ public class GoalSideAuto extends CommandOpMode {
 
     @Override
     public void run() {
-        turret.updatePose(follower.getPose());
+        turret.updateBotPose(follower.getPose());
         telemetry.addData("isBusy", follower.isBusy());
         telemetry.addData("Pose", follower.getPose());
         telemetry.update();
