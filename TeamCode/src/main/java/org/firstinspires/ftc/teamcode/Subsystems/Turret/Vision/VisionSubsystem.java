@@ -21,44 +21,32 @@ public class VisionSubsystem extends SubsystemBase {
     private final Limelight3A limelight;
 
     public VisionSubsystem(HardwareMap hardwareMap) {
-
         limelight = hardwareMap.get(
                 Limelight3A.class,
                 VisionConstants.LIMELIGHT_NAME
         );
-
-        // Seleciona pipeline MT2
         limelight.pipelineSwitch(VisionConstants.MT2_PIPELINE);
     }
 
-    public Optional<Pose> getRobotPoseMT2(double fallbackHeading) {
+    public void updateHeading(double headingDegrees) {
+        limelight.updateRobotOrientation(headingDegrees);
+    }
 
+    public Optional<Pose> getVisionPose(double currentHeadingRadians) {
         LLResult result = limelight.getLatestResult();
-        if (result == null || !result.isValid()) {
-            return Optional.empty();
-        }
+        if (result == null || !result.isValid()) return Optional.empty();
 
-        Pose3D botpose = result.getBotpose();
-        if (botpose == null) {
-            return Optional.empty();
-        }
+        Pose3D botpose = result.getBotpose_MT2();
+        if (botpose == null) return Optional.empty();
 
-        double xMeters = botpose.getPosition().x;
-        double yMeters = botpose.getPosition().y;
-        double xInches = xMeters * VisionConstants.METERS_TO_INCHES;
-        double yInches = yMeters * VisionConstants.METERS_TO_INCHES;
+        double xInches = botpose.getPosition().x * VisionConstants.METERS_TO_INCHES;
+        double yInches = botpose.getPosition().y * VisionConstants.METERS_TO_INCHES;
 
-        return Optional.of(
-                new Pose(
-                        xInches,
-                        yInches,
-                        fallbackHeading // IGNORA yaw da câmera
-                )
-        );
+        return Optional.of(new Pose(xInches, yInches, currentHeadingRadians));
     }
 
     public boolean hasValidTarget() {
         LLResult result = limelight.getLatestResult();
-        return result != null && result.isValid() && result.getBotpose() != null;
+        return result != null && result.isValid() && result.getBotpose_MT2() != null;
     }
 }
