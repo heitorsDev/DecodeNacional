@@ -54,7 +54,7 @@ public class TeleOp extends CommandOpMode {
     @Override
     public void run(){
         super.run();
-        Optional <Pose> optionalPose = vision.getVisionPose(follower.getPose().getHeading());
+        Optional <Pose> optionalPose = vision.getVisionPose(follower.getPose());
         Pose visionPose = (optionalPose.orElse(null));
         if (visionPose!=null){
             //follower.setPose(visionPose);
