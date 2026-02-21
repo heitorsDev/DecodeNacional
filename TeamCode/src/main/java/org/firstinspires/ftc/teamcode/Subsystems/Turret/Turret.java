@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Subsystems.Turret;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -26,7 +27,7 @@ public class Turret extends SubsystemBase {
     InterpLUT velocityInterpolation = new InterpLUT();
     double minDistance = 0;
     double maxDistance = 1000;
-
+    Pose lastPose = new Pose(0,0,0);
 
 
     PIDController turretController = new PIDController(1,0,0);
@@ -36,8 +37,23 @@ public class Turret extends SubsystemBase {
         return Math.toRadians(Taura1.getRawPositionInDegrees())/(180/70);
     }
     public boolean okToShoot = false;
+    Pose virtualBotPose = new Pose(0,0,0);
+    private Vector movementVector = new Vector(0,0);
+    double virtualBotMultiplier = 2;
     public void updateBotPose(Pose pose){
+        this.lastPose = this.botPose;
         this.botPose = pose;
+        movementVector = new Vector(
+                lastPose.distanceFrom(botPose),
+                Math.atan2(botPose.getY()-lastPose.getY(), botPose.getX()-lastPose.getX())
+        ).times(virtualBotMultiplier);
+        virtualBotPose = new Pose(
+                botPose.getX()+movementVector.getXComponent(),
+                botPose.getY()+movementVector.getYComponent(),
+                botPose.getHeading()
+        );
+
+
     }
     TurretConstants.SIDES side = TurretConstants.SIDES.BLUE;
     public void setSide(TurretConstants.SIDES side){
