@@ -117,7 +117,6 @@ public class Turret extends SubsystemBase {
         setShooterVelocity(tuningVelocity);
         telemetry.addData("Position: ", getTurretAngle());
         telemetry.addData("Distance: ", distance);
-        telemetry.update();
 
     }
 
