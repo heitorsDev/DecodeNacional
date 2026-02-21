@@ -47,10 +47,10 @@ public class Turret extends SubsystemBase {
     double distance = 0;
 
     private void updateTurret(){
-        double goalAngleFC = Math.atan2(poseToAim.getX()-botPose.getX(), poseToAim.getY()-botPose.getY());
+        double goalAngleFC = Math.atan2(poseToAim.getY()-botPose.getY(),poseToAim.getX()-botPose.getX());
         double goalAngleBC = goalAngleFC-botPose.getHeading();//BC stands for bot-centric, FC for field-centric
 
-        double goalAngleBCcorrected = Range.clip(goalAngleBC,-90,90);
+        double goalAngleBCcorrected = Range.clip(goalAngleBC,Math.toRadians(-90),Math.toRadians(90));
         okToShoot = goalAngleBCcorrected==goalAngleBC;
         if (!okToShoot){
             goalAngleBCcorrected=0;
