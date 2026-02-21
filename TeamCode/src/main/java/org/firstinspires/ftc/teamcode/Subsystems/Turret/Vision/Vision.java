@@ -24,6 +24,7 @@ public class Vision extends SubsystemBase {
                 VisionConstants.LIMELIGHT_NAME
         );
         limelight.pipelineSwitch(VisionConstants.MT2_PIPELINE);
+        limelight.start();
     }
 
     public void updateHeading(double headingDegrees) {
@@ -31,6 +32,7 @@ public class Vision extends SubsystemBase {
     }
 
     public Optional<Pose> getVisionPose(double currentHeadingRadians) {
+        updateHeading(Math.toDegrees(currentHeadingRadians));
         LLResult result = limelight.getLatestResult();
         if (result == null || !result.isValid()) return Optional.empty();
 
