@@ -1,12 +1,15 @@
 package org.firstinspires.ftc.teamcode.Subsystems.Gate;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import org.firstinspires.ftc.teamcode.Subsystems.Gate.GateConstants;
+@Config
 
 public class Gate extends SubsystemBase {
     Servo gate1;
+    public static double position = 0;
     Servo gate2;
     public Gate(HardwareMap hardwareMap){
         gate1 = hardwareMap.get(Servo.class, GateConstants.HMGate1);
@@ -23,6 +26,6 @@ public class Gate extends SubsystemBase {
 
     @Override
     public void periodic(){
-
+        gate1.setPosition(position);
     }
 }

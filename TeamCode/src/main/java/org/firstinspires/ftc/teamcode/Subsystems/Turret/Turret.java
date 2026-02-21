@@ -29,11 +29,11 @@ public class Turret extends SubsystemBase {
 
 
 
-    PIDController turretController = new PIDController(0.2,0,0);
+    PIDController turretController = new PIDController(1,0,0);
     Pose botPose = new Pose(0,0,0);
     Pose poseToAim = new Pose(0,0,0);
-    private double getTurretAngle(){
-        return Math.toRadians(Taura1.getRawPositionInDegrees());
+    public double getTurretAngle(){
+        return Math.toRadians(Taura1.getRawPositionInDegrees())/(180/70);
     }
     public boolean okToShoot = false;
     public void updateBotPose(Pose pose){
@@ -47,10 +47,10 @@ public class Turret extends SubsystemBase {
     double distance = 0;
 
     private void updateTurret(){
-        double goalAngleFC = Math.atan2(poseToAim.getX()-botPose.getX(), poseToAim.getY()-botPose.getY());
+        double goalAngleFC = Math.atan2(poseToAim.getY()-botPose.getY(),poseToAim.getX()-botPose.getX());
         double goalAngleBC = goalAngleFC-botPose.getHeading();//BC stands for bot-centric, FC for field-centric
 
-        double goalAngleBCcorrected = Range.clip(goalAngleBC,-90,90);
+        double goalAngleBCcorrected = Range.clip(goalAngleBC,Math.toRadians(-90),Math.toRadians(90));
         okToShoot = goalAngleBCcorrected==goalAngleBC;
         if (!okToShoot){
             goalAngleBCcorrected=0;
@@ -99,6 +99,7 @@ public class Turret extends SubsystemBase {
         }
         updateTurret();
         setShooterVelocity(tuningVelocity);
+        telemetry.addData("Position: ", getTurretAngle());
         telemetry.addData("Distance: ", distance);
         telemetry.update();
 
