@@ -16,11 +16,11 @@ public class Intake extends SubsystemBase {
     }
 public void On(){
     Intake1.setPower(IntakeConstants.TurnOn);
-    Intake2.setPower(-IntakeConstants.TurnOn);
+    Intake2.setPower(IntakeConstants.TurnOn);
 }
 public void Off(){
     Intake1.setPower(IntakeConstants.TurnOff);
-    Intake2.setPower(-IntakeConstants.TurnOff);
+    Intake2.setPower(IntakeConstants.TurnOff);
 }
 
 @Override

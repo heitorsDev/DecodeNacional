@@ -5,8 +5,10 @@ import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
@@ -25,8 +27,8 @@ public class Turret extends SubsystemBase {
     DcMotorEx shooter2;
 
     InterpLUT velocityInterpolation = new InterpLUT();
-    double minDistance = 0;
-    double maxDistance = 1000;
+    double minDistance = 60;
+    double maxDistance = 123;
     Pose lastPose = new Pose(0,0,0);
 
 
@@ -34,7 +36,8 @@ public class Turret extends SubsystemBase {
     Pose botPose = new Pose(0,0,0);
     Pose poseToAim = new Pose(0,0,0);
     public double getTurretAngle(){
-        return Math.toRadians(Taura1.getRawPositionInDegrees())/(180/70);
+        double encoderAngle = Math.toRadians(-Taura1.getIncrementalPositionInDegrees() / (180.0/70.0));
+        return normalizeAngle(encoderAngle);
     }
     public boolean okToShoot = false;
     Pose virtualBotPose = new Pose(0,0,0);
@@ -62,36 +65,38 @@ public class Turret extends SubsystemBase {
 
     double distance = 0;
 
+    double targetAngleFC = 0; // input em radianos, field centric
     private void updateTurret(){
-        double goalAngleFC = Math.atan2(poseToAim.getY()-botPose.getY(),poseToAim.getX()-botPose.getX());
-        double goalAngleBC = goalAngleFC-botPose.getHeading();//BC stands for bot-centric, FC for field-centric
+        targetAngleFC = -Math.atan2(poseToAim.getY()-botPose.getY(), poseToAim.getX()-botPose.getX())+Math.PI;
+        double targetAngleRC = normalizeAngle(targetAngleFC + botPose.getHeading());
 
-        double goalAngleBCcorrected = Range.clip(goalAngleBC,Math.toRadians(-90),Math.toRadians(90));
-        okToShoot = goalAngleBCcorrected==goalAngleBC;
-        if (!okToShoot){
-            goalAngleBCcorrected=0;
-        }
-        turretController.setSetPoint(goalAngleBCcorrected);
-        double power = turretController.calculate(getTurretAngle())/2;
-        Taura1.setPosition(
-            0.5+power
+        targetAngleRC = Range.clip(targetAngleRC, -Math.PI/2, Math.PI/2);
+
+        double currentAngle = getTurretAngle();
+
+        double power = Range.clip(
+                turretController.calculate(currentAngle, targetAngleRC) / 2,
+                -0.5, 0.5
         );
-        Taura2.setPosition(
-                0.5+power
-        );
-        distance = botPose.distanceFrom(poseToAim);
 
+        Taura1.setPosition(0.5 + power);
+        Taura2.setPosition(0.5 + power);
 
-
+        distance = virtualBotPose.distanceFrom(poseToAim);
+    }
+    private double normalizeAngle(double angle){
+        while (angle > Math.PI)  angle -= 2 * Math.PI;
+        while (angle < -Math.PI) angle += 2 * Math.PI;
+        return angle;
     }
     public void setShooterVelocity(int power){
         shooter1.setVelocity(power);
         shooter2.setVelocity(power);
     }
     private void updateShooter(){
-        setShooterVelocity(
+        /*setShooterVelocity(
                 (int) velocityInterpolation.get(Range.clip(distance,minDistance+1, maxDistance -1)
-        ));
+        ));*/
     }
     Telemetry telemetry;
     public Turret(HardwareMap hardwareMap){
@@ -101,6 +106,15 @@ public class Turret extends SubsystemBase {
         Taura1.setAnalogFeedbackSensor(hardwareMap.get(AnalogInput.class, TurretConstants.HMEncoder));
         shooter1 = hardwareMap.get(DcMotorEx.class, "shooter1");
         shooter2 = hardwareMap.get(DcMotorEx.class, "shooter2");
+        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(50, 0, 0, 20));
+        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(50, 0, 0, 20));
+
+        /*velocityInterpolation.add(minDistance, 850);
+        velocityInterpolation.add(75, 870);
+        velocityInterpolation.add(90, 930);
+        velocityInterpolation.add(maxDistance, 1020);
+        velocityInterpolation.createLUT();*/
+
     }
     
     @Override
@@ -114,9 +128,11 @@ public class Turret extends SubsystemBase {
                 break;
         }
         updateTurret();
+        updateShooter();
         setShooterVelocity(tuningVelocity);
         telemetry.addData("Position: ", getTurretAngle());
         telemetry.addData("Distance: ", distance);
+        telemetry.update();
 
     }
 

@@ -23,29 +23,29 @@ public class TeleOp extends CommandOpMode {
     private Gate gate;
     private Intake intake;
     private Follower follower;
-    private Vision vision;
+    //private Vision vision;
 
 
     @Override
     public void initialize() {
-
         GamepadEx gamepadEx = new GamepadEx(gamepad1);
         turret = new Turret(hardwareMap);
         gate = new Gate(hardwareMap);
         intake = new Intake(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
-        vision = new Vision(hardwareMap);
+        //vision = new Vision(hardwareMap);
 
         turret.setSide(PosePersistency.lastSide);
 
 
-        gamepadEx.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenActive(new IntakeOn(intake));
-        gamepadEx.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenActive(new IntakeOff(intake));
+        gamepadEx.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenActive(new IntakeOn(intake));
+        gamepadEx.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenInactive(new IntakeOff(intake));
         gamepadEx.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenActive(new TransferSequence(intake, gate, turret));
 
 
-        register(turret, gate,intake, vision);
+        register(turret, gate,intake);
 
+        follower.setPose(PosePersistency.lastPose);
 
 
         follower.startTeleOpDrive();
@@ -54,16 +54,11 @@ public class TeleOp extends CommandOpMode {
     @Override
     public void run(){
         super.run();
-        Optional <Pose> optionalPose = vision.getVisionPose(follower.getPose());
-        Pose visionPose = (optionalPose.orElse(null));
-        if (visionPose!=null){
-            //follower.setPose(visionPose);
-            telemetry.addData("Vision pose: ", visionPose.toString());
-        }
-        follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
+        follower.setTeleOpDrive(gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
         follower.update();
 
         turret.updateBotPose(follower.getPose());
+
         telemetry.update();
     }
 }

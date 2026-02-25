@@ -10,7 +10,7 @@ public class TurretConstants {
 
     public static final String HMEncoder = "encoder";
 
-    public static final Pose blueGoalPose = new Pose(144,0,0);
+    public static final Pose blueGoalPose = new Pose(0,144,0);
     public static final Pose redGoalPose = blueGoalPose.mirror();
 
 

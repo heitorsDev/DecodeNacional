@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.RunCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
+import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -44,6 +45,9 @@ public class GoalSideAuto extends CommandOpMode {
     Path thirdRowSweep;
     Path thirdRowToShoot;
 
+    Path gateIntakeToShoot;
+    Path shootToGateIntake;
+    public Pose shootingPose;
     @Override
     public void initialize() {
         turret = new Turret(hardwareMap);
@@ -71,17 +75,17 @@ public class GoalSideAuto extends CommandOpMode {
         follower = Constants.createFollower(hardwareMap);
 
         Pose startPose = new Pose(35.090, 132.823, Math.toRadians(-90));
-        Pose shootingPose = new Pose(50, 100, Math.toRadians(-90));
+         shootingPose = new Pose(50, 100, Math.toRadians(-120));
 
-        Pose startFirstRow = new Pose(40, 85, Math.toRadians(180));
-        Pose endFirstRow   = new Pose(16, 85, Math.toRadians(180));
+        Pose startFirstRow = new Pose(40, 84, Math.toRadians(180));
+        Pose endFirstRow   = new Pose(16, 84, Math.toRadians(180));
 
-        Pose startSecondRow = new Pose(40, 50, Math.toRadians(180));
-        Pose endSecondRow   = new Pose(16, 50, Math.toRadians(180));
+        Pose startSecondRow = new Pose(40, 55, Math.toRadians(180));
+        Pose endSecondRow   = new Pose(9, 55, Math.toRadians(180));
 
-        Pose startThirdRow = new Pose(40, 36, Math.toRadians(180));
-        Pose endThirdRow   = new Pose(16, 36, Math.toRadians(180));
-
+        Pose startThirdRow = new Pose(40, 38, Math.toRadians(180));
+        Pose endThirdRow   = new Pose(16, 38, Math.toRadians(180));
+        Pose gateIntake = new Pose(11, 63, Math.toRadians(150));
         if (side== TurretConstants.SIDES.RED){
             startPose = startPose.mirror();
             shootingPose = shootingPose.mirror();
@@ -91,6 +95,7 @@ public class GoalSideAuto extends CommandOpMode {
             endSecondRow = endSecondRow.mirror();
             startThirdRow = startThirdRow.mirror();
             endThirdRow = endThirdRow.mirror();
+            gateIntake = gateIntake.mirror();
         }
 
 
@@ -177,6 +182,12 @@ public class GoalSideAuto extends CommandOpMode {
                 shootingPose.getHeading()
         );
 
+        gateIntakeToShoot = new Path(new BezierLine(gateIntake, shootingPose));
+        gateIntakeToShoot.setLinearHeadingInterpolation(gateIntake.getHeading(),shootingPose.getHeading());
+
+        shootToGateIntake = new Path(new BezierLine(shootingPose, gateIntake));
+        shootToGateIntake.setLinearHeadingInterpolation(shootingPose.getHeading(), gateIntake.getHeading());
+
         schedule(
                 new RunCommand(() -> follower.update()),
                 new RunCommand(()->PosePersistency.lastPose=follower.getPose()),
@@ -195,6 +206,12 @@ public class GoalSideAuto extends CommandOpMode {
                         new FollowPathCommand(follower, secondRowToShoot),
                         new TransferSequence(intake, gate, turret),
 
+                        new FollowPathCommand(follower, shootToGateIntake),
+                        new IntakeOn(intake),
+                        new WaitCommand(1000),
+                        new FollowPathCommand(follower, gateIntakeToShoot),
+                        new TransferSequence(intake, gate, turret),
+
                         new FollowPathCommand(follower, shootToThirdRow),
                         new IntakeOn(intake),
                         new FollowPathCommand(follower, thirdRowSweep),
@@ -208,7 +225,7 @@ public class GoalSideAuto extends CommandOpMode {
     @Override
     public void run() {
         PosePersistency.lastPose = follower.getPose();
-        turret.updateBotPose(follower.getPose());
+        turret.updateBotPose(shootingPose);
         telemetry.addData("isBusy", follower.isBusy());
         telemetry.addData("Pose", follower.getPose());
         telemetry.update();

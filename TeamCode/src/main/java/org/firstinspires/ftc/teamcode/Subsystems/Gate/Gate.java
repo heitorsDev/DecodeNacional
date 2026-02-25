@@ -26,6 +26,5 @@ public class Gate extends SubsystemBase {
 
     @Override
     public void periodic(){
-        gate1.setPosition(position);
     }
 }
