@@ -23,7 +23,7 @@ public class TeleOp extends CommandOpMode {
     private Gate gate;
     private Intake intake;
     private Follower follower;
-    //private Vision vision;
+    private Vision vision;
 
 
     @Override
@@ -33,7 +33,7 @@ public class TeleOp extends CommandOpMode {
         gate = new Gate(hardwareMap);
         intake = new Intake(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
-        //vision = new Vision(hardwareMap);
+        vision = new Vision(hardwareMap);
 
         turret.setSide(PosePersistency.lastSide);
 
@@ -56,6 +56,11 @@ public class TeleOp extends CommandOpMode {
         super.run();
         follower.setTeleOpDrive(gamepad1.left_stick_y, gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
         follower.update();
+
+        Pose currentPose = follower.getPose();
+            Optional<Pose> visionPose = vision.getVisionPose(currentPose);
+            visionPose.ifPresent(pose -> {follower.setPose(pose);}
+            );
 
         turret.updateBotPose(follower.getPose());
 
