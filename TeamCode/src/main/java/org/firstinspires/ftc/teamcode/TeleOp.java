@@ -54,7 +54,7 @@ public class TeleOp extends CommandOpMode {
     @Override
     public void run(){
         super.run();
-        follower.setTeleOpDrive(gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
+        follower.setTeleOpDrive(gamepad1.left_stick_y, gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
         follower.update();
 
         turret.updateBotPose(follower.getPose());

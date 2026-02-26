@@ -94,9 +94,9 @@ public class Turret extends SubsystemBase {
         shooter2.setVelocity(power);
     }
     private void updateShooter(){
-        /*setShooterVelocity(
+        setShooterVelocity(
                 (int) velocityInterpolation.get(Range.clip(distance,minDistance+1, maxDistance -1)
-        ));*/
+        ));
     }
     Telemetry telemetry;
     public Turret(HardwareMap hardwareMap){
@@ -109,11 +109,11 @@ public class Turret extends SubsystemBase {
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(50, 0, 0, 20));
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(50, 0, 0, 20));
 
-        /*velocityInterpolation.add(minDistance, 850);
-        velocityInterpolation.add(75, 870);
-        velocityInterpolation.add(90, 930);
-        velocityInterpolation.add(maxDistance, 1020);
-        velocityInterpolation.createLUT();*/
+        velocityInterpolation.add(minDistance, 750);
+        velocityInterpolation.add(81, 850);
+        velocityInterpolation.add(94, 950);
+        velocityInterpolation.add(maxDistance, 1050);
+        velocityInterpolation.createLUT();
 
     }
     
@@ -129,7 +129,7 @@ public class Turret extends SubsystemBase {
         }
         updateTurret();
         updateShooter();
-        setShooterVelocity(tuningVelocity);
+        //setShooterVelocity(tuningVelocity);
         telemetry.addData("Position: ", getTurretAngle());
         telemetry.addData("Distance: ", distance);
         telemetry.update();
