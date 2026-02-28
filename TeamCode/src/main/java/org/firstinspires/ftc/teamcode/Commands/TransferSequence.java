@@ -25,7 +25,7 @@ public class TransferSequence extends SequentialCommandGroup {
                 new WaitCommand(400),
                 new IntakeOn(intake),
 
-                new WaitCommand(1500),
+                new WaitCommand(800),
                 new OpenGate(gate),
                 new IntakeOff(intake)
 

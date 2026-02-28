@@ -29,7 +29,12 @@ public class TeleOp extends CommandOpMode {
     @Override
     public void initialize() {
         GamepadEx gamepadEx = new GamepadEx(gamepad1);
-        turret = new Turret(hardwareMap);
+
+        if (PosePersistency.turret==null) {
+            turret = new Turret(hardwareMap);
+        } else {
+            turret = PosePersistency.turret;
+        }
         gate = new Gate(hardwareMap);
         intake = new Intake(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
@@ -59,7 +64,11 @@ public class TeleOp extends CommandOpMode {
 
         Pose currentPose = follower.getPose();
             Optional<Pose> visionPose = vision.getVisionPose(currentPose);
-            visionPose.ifPresent(pose -> {follower.setPose(pose);}
+            visionPose.ifPresent(pose -> {
+                telemetry.addData("BOT PSE ODOM", follower.getPose().toString());
+                telemetry.addData("BOTPOSE VISION", pose.toString());
+            }
+
             );
 
         turret.updateBotPose(follower.getPose());

@@ -70,7 +70,7 @@ public class Turret extends SubsystemBase {
         targetAngleFC = -Math.atan2(poseToAim.getY()-botPose.getY(), poseToAim.getX()-botPose.getX())+Math.PI;
         double targetAngleRC = normalizeAngle(targetAngleFC + botPose.getHeading());
 
-        targetAngleRC = Range.clip(targetAngleRC, -Math.PI/2, Math.PI/2);
+        targetAngleRC = Range.clip(targetAngleRC, -Math.toRadians(120), Math.toRadians(120));
 
         double currentAngle = getTurretAngle();
 
@@ -109,14 +109,14 @@ public class Turret extends SubsystemBase {
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(50, 0, 0, 20));
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(50, 0, 0, 20));
 
-        velocityInterpolation.add(minDistance, 750);
-        velocityInterpolation.add(81, 850);
-        velocityInterpolation.add(94, 950);
-        velocityInterpolation.add(maxDistance, 1050);
+        velocityInterpolation.add(minDistance, 850);
+        velocityInterpolation.add(88, 890);
+        velocityInterpolation.add(101, 930);
+        velocityInterpolation.add(maxDistance, 1080);
         velocityInterpolation.createLUT();
 
     }
-    
+
     @Override
     public void periodic(){
         switch (side){
