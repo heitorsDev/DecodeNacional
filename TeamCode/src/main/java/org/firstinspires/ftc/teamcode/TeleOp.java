@@ -8,10 +8,12 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 import org.firstinspires.ftc.teamcode.Commands.Intake.IntakeOff;
 import org.firstinspires.ftc.teamcode.Commands.Intake.IntakeOn;
+import org.firstinspires.ftc.teamcode.Commands.ResetForSide;
 import org.firstinspires.ftc.teamcode.Commands.TransferSequence;
 import org.firstinspires.ftc.teamcode.Subsystems.Gate.Gate;
 import org.firstinspires.ftc.teamcode.Subsystems.Intake.Intake;
 import org.firstinspires.ftc.teamcode.Subsystems.Turret.Turret;
+import org.firstinspires.ftc.teamcode.Subsystems.Turret.TurretConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.Turret.Vision.Vision;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -34,6 +36,7 @@ public class TeleOp extends CommandOpMode {
             turret = new Turret(hardwareMap);
         } else {
             turret = PosePersistency.turret;
+            turret.reinitMotors();
         }
         gate = new Gate(hardwareMap);
         intake = new Intake(hardwareMap);
@@ -46,6 +49,7 @@ public class TeleOp extends CommandOpMode {
         gamepadEx.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenActive(new IntakeOn(intake));
         gamepadEx.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenInactive(new IntakeOff(intake));
         gamepadEx.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenActive(new TransferSequence(intake, gate, turret));
+        gamepadEx.getGamepadButton(GamepadKeys.Button.B).whenActive(new ResetForSide(follower));
 
 
         register(turret, gate,intake);
@@ -59,17 +63,10 @@ public class TeleOp extends CommandOpMode {
     @Override
     public void run(){
         super.run();
-        follower.setTeleOpDrive(gamepad1.left_stick_y, gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
+        follower.setTeleOpDrive(gamepad1.left_stick_y*(PosePersistency.lastSide== TurretConstants.SIDES.RED?-1:1), gamepad1.left_stick_x*(PosePersistency.lastSide== TurretConstants.SIDES.RED?-1:1), -gamepad1.right_stick_x, false);
         follower.update();
 
-        Pose currentPose = follower.getPose();
-            Optional<Pose> visionPose = vision.getVisionPose(currentPose);
-            visionPose.ifPresent(pose -> {
-                telemetry.addData("BOT PSE ODOM", follower.getPose().toString());
-                telemetry.addData("BOTPOSE VISION", pose.toString());
-            }
 
-            );
 
         turret.updateBotPose(follower.getPose());
 

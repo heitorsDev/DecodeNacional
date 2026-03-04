@@ -1,10 +1,8 @@
 package org.firstinspires.ftc.teamcode.Subsystems.Intake;
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
-import com.seattlesolvers.solverslib.hardware.motors.Motor;
 
 public class Intake extends SubsystemBase {
 
@@ -14,9 +12,13 @@ public class Intake extends SubsystemBase {
         Intake1 = hardwareMap.get(DcMotor.class, IntakeConstants.HMIntake1);
         Intake2 = hardwareMap.get(DcMotor.class, IntakeConstants.HMIntake2);
     }
-public void On(){
+public void OnIntake(){
     Intake1.setPower(IntakeConstants.TurnOn);
     Intake2.setPower(IntakeConstants.TurnOn);
+}
+public void OnTransfer(){
+        Intake1.setPower(IntakeConstants.TurnTransfer);
+        Intake2.setPower(IntakeConstants.TurnTransfer);
 }
 public void Off(){
     Intake1.setPower(IntakeConstants.TurnOff);

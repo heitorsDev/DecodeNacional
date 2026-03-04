@@ -22,17 +22,26 @@ public class Turret extends SubsystemBase {
     public static int tuningVelocity = 0;
     TauraServo Taura1;
     TauraServo Taura2;
-
+    Servo headlight;
     DcMotorEx shooter1;
     DcMotorEx shooter2;
 
     InterpLUT velocityInterpolation = new InterpLUT();
-    double minDistance = 60;
-    double maxDistance = 123;
+    double minDistance = 58;
+    double maxDistance = 145;
     Pose lastPose = new Pose(0,0,0);
 
+    public double getDistance(){
+        return distance;
+    }
+    public void reinitMotors() {
+        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-    PIDController turretController = new PIDController(1,0,0);
+        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(400, 0, 0, 15.5));
+        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(400, 0, 0, 15.5));
+    }
+    PIDController turretController = new PIDController(3,0,0);
     Pose botPose = new Pose(0,0,0);
     Pose poseToAim = new Pose(0,0,0);
     public double getTurretAngle(){
@@ -69,7 +78,18 @@ public class Turret extends SubsystemBase {
     private void updateTurret(){
         targetAngleFC = -Math.atan2(poseToAim.getY()-botPose.getY(), poseToAim.getX()-botPose.getX())+Math.PI;
         double targetAngleRC = normalizeAngle(targetAngleFC + botPose.getHeading());
+        //segredo
+        if (this.side== TurretConstants.SIDES.RED){
+            targetAngleRC+=TurretConstants.redOffset;
+        }else{
+            targetAngleRC+=TurretConstants.blueOffset;
+        }
+        if (targetAngleRC>-Math.toRadians(120) && targetAngleRC<120 && Math.abs(turretController.getPositionError())<Math.toRadians(10)){
+            headlight.setPosition(1);
 
+        } else {
+            headlight.setPosition(0);
+        }
         targetAngleRC = Range.clip(targetAngleRC, -Math.toRadians(120), Math.toRadians(120));
 
         double currentAngle = getTurretAngle();
@@ -82,7 +102,7 @@ public class Turret extends SubsystemBase {
         Taura1.setPosition(0.5 + power);
         Taura2.setPosition(0.5 + power);
 
-        distance = virtualBotPose.distanceFrom(poseToAim);
+        distance = botPose.distanceFrom(poseToAim);
     }
     private double normalizeAngle(double angle){
         while (angle > Math.PI)  angle -= 2 * Math.PI;
@@ -100,19 +120,21 @@ public class Turret extends SubsystemBase {
     }
     Telemetry telemetry;
     public Turret(HardwareMap hardwareMap){
+        headlight = hardwareMap.get(Servo.class, "headlight");
         telemetry = FtcDashboard.getInstance().getTelemetry();
         Taura1 = new TauraServo(hardwareMap.get(Servo.class, TurretConstants.HMTaura1));
         Taura2 = new TauraServo(hardwareMap.get(Servo.class, TurretConstants.HMTaura2));
         Taura1.setAnalogFeedbackSensor(hardwareMap.get(AnalogInput.class, TurretConstants.HMEncoder));
         shooter1 = hardwareMap.get(DcMotorEx.class, "shooter1");
         shooter2 = hardwareMap.get(DcMotorEx.class, "shooter2");
-        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(50, 0, 0, 20));
-        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(50, 0, 0, 20));
-
-        velocityInterpolation.add(minDistance, 850);
-        velocityInterpolation.add(88, 890);
-        velocityInterpolation.add(101, 930);
-        velocityInterpolation.add(maxDistance, 1080);
+        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(400, 0, 0, 15.5));
+        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(400, 0, 0, 15.5));
+        //650 58 740 76 800 94 850 108 960 145
+        velocityInterpolation.add(minDistance, 770);
+        velocityInterpolation.add(76, 850);
+        velocityInterpolation.add(94, 910);
+        velocityInterpolation.add(108, 960);
+        velocityInterpolation.add(maxDistance, 1050);
         velocityInterpolation.createLUT();
 
     }
@@ -129,9 +151,10 @@ public class Turret extends SubsystemBase {
         }
         updateTurret();
         updateShooter();
-        //setShooterVelocity(tuningVelocity);
         telemetry.addData("Position: ", getTurretAngle());
         telemetry.addData("Distance: ", distance);
+        telemetry.addData("Encoder Shooter1: ", shooter1.getVelocity());
+        telemetry.addData("Encoder Shooter2: ", shooter2.getVelocity());
         telemetry.update();
 
     }

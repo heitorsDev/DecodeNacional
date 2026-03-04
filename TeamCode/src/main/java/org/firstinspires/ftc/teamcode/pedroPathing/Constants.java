@@ -19,10 +19,10 @@ public class Constants {
             .mass(7)
             .forwardZeroPowerAcceleration(-31.3)
             .lateralZeroPowerAcceleration(-57.1)
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(.02,0,0.0015,1, 0.01))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(.02,0,0.002,1, 0.01))
             ;
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 10, 1, 1);
+    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)

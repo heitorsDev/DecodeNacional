@@ -4,18 +4,18 @@ import com.seattlesolvers.solverslib.command.CommandBase;
 
 import org.firstinspires.ftc.teamcode.Subsystems.Intake.Intake;
 
-public class IntakeOn extends CommandBase {
+public class IntakeTransfer extends CommandBase {
 
     private final Intake intake;
 
-    public IntakeOn(Intake intake) {
+    public IntakeTransfer(Intake intake) {
         this.intake = intake;
         addRequirements(intake);
     }
 
     @Override
     public void initialize() {
-        intake.OnIntake();
+        intake.OnTransfer();
     }
 
     @Override

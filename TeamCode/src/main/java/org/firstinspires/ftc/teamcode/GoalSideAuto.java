@@ -2,12 +2,14 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathBuilder;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.hardware.HardwareDeviceCloseOnTearDown;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.RunCommand;
@@ -18,6 +20,7 @@ import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Commands.Intake.IntakeOff;
 import org.firstinspires.ftc.teamcode.Commands.Intake.IntakeOn;
+import org.firstinspires.ftc.teamcode.Commands.Intake.IntakeTransfer;
 import org.firstinspires.ftc.teamcode.Commands.TransferSequence;
 import org.firstinspires.ftc.teamcode.Field.Sides;
 import org.firstinspires.ftc.teamcode.Subsystems.Gate.Gate;
@@ -42,6 +45,8 @@ public class GoalSideAuto extends CommandOpMode {
 
     Path gateIntakeToShoot;
     Path shootToGateIntake;
+    Path shootToGateIntake2;
+    PathChain gateIntakeChain;
     public Pose shootingPose;
     public Pose shootingPose2;
 
@@ -71,20 +76,22 @@ public class GoalSideAuto extends CommandOpMode {
 
         follower = Constants.createFollower(hardwareMap);
 
-        Pose startPose = new Pose(35.090, 132.823, Math.toRadians(-90));
+        Pose startPose = new Pose(31.7, 144-8.5, Math.toRadians(-90));
 
-        shootingPose = new Pose(58, 75, Math.toRadians(-170));
+        shootingPose = new Pose(57, 81, Math.toRadians(-160));
         shootingPose2 = new Pose(55, 100, Math.toRadians(-150));
-        Pose startFirstRow = new Pose(40, 84, Math.toRadians(190));
-        Pose endFirstRow   = new Pose(18, 84, Math.toRadians(190));
+        Pose startFirstRow = new Pose(43, 84, Math.toRadians(190));
+        Pose endFirstRow   = new Pose(23, 84, Math.toRadians(190));
 
-        Pose startSecondRow = new Pose(40, 63, Math.toRadians(190));
-        Pose endSecondRow   = new Pose(14, 52, Math.toRadians(190));
+        Pose startSecondRow = new Pose(43, 63, Math.toRadians(180));
+        Pose endSecondRow   = new Pose(19, 63, Math.toRadians(180));
 
-        Pose startThirdRow = new Pose(40, 38, Math.toRadians(190));
-        Pose endThirdRow   = new Pose(14, 38, Math.toRadians(190));
+        Pose startThirdRow = new Pose(43, 40, Math.toRadians(180));
+        Pose endThirdRow   = new Pose(19, 40, Math.toRadians(180));
 
-        Pose gateIntake = new Pose(12.1, 61.4, Math.toRadians(142));
+        Pose gateIntake = new Pose(9, 62, Math.toRadians(160));
+        Pose gateControl = new Pose(15,57, 0);
+        Pose gateIntake2 = new Pose(15,53, Math.toRadians(90));
 
         if (side == TurretConstants.SIDES.RED) {
             startPose = startPose.mirror();
@@ -97,22 +104,24 @@ public class GoalSideAuto extends CommandOpMode {
             startThirdRow = startThirdRow.mirror();
             endThirdRow = endThirdRow.mirror();
             gateIntake = gateIntake.mirror();
+            gateIntake2 = gateIntake2.mirror();
         }
 
         follower.setPose(startPose);
 
-        startToShoot = new Path(new BezierLine(startPose, shootingPose2));
-        startToShoot.setLinearHeadingInterpolation(startPose.getHeading(), shootingPose2.getHeading());
+        startToShoot = new Path(new BezierLine(startPose, shootingPose));
+        //startToShoot.setLinearHeadingInterpolation(startPose.getHeading(), shootingPose.getHeading());
 
         // First row: shoot -> startRow -> endRow -> shoot, all in one chain
         Pose finalStartFirstRow = startFirstRow;
         Pose finalEndFirstRow = endFirstRow;
         firstRowChain = follower.pathBuilder()
-                .addPath(new BezierLine(shootingPose2, finalStartFirstRow))
-                .setLinearHeadingInterpolation(shootingPose2.getHeading(), finalStartFirstRow.getHeading())
+                .addPath(new BezierLine(shootingPose, finalStartFirstRow))
+                .setLinearHeadingInterpolation(shootingPose.getHeading(), finalStartFirstRow.getHeading())
                 .addPath(new BezierLine(finalStartFirstRow, finalEndFirstRow))
                 .setLinearHeadingInterpolation(finalStartFirstRow.getHeading(), finalEndFirstRow.getHeading())
                 .addPath(new BezierLine(finalEndFirstRow, shootingPose))
+
                 .setLinearHeadingInterpolation(finalEndFirstRow.getHeading(), shootingPose.getHeading())
                 .build();
 
@@ -125,7 +134,8 @@ public class GoalSideAuto extends CommandOpMode {
                 .addPath(new BezierLine(finalStartSecondRow, finalEndSecondRow))
                 .setLinearHeadingInterpolation(finalStartSecondRow.getHeading(), finalEndSecondRow.getHeading())
                 .addPath(new BezierLine(finalEndSecondRow, shootingPose))
-                .setLinearHeadingInterpolation(finalEndSecondRow.getHeading(), shootingPose.getHeading())
+                .setReversed()
+                //.setLinearHeadingInterpolation(finalEndSecondRow.getHeading(), shootingPose.getHeading())
                 .build();
 
         // Third row: shoot -> startRow -> endRow -> shoot, all in one chain
@@ -137,15 +147,21 @@ public class GoalSideAuto extends CommandOpMode {
                 .addPath(new BezierLine(finalStartThirdRow, finalEndThirdRow))
                 .setLinearHeadingInterpolation(finalStartThirdRow.getHeading(), finalEndThirdRow.getHeading())
                 .addPath(new BezierLine(finalEndThirdRow, shootingPose))
-                .setLinearHeadingInterpolation(finalEndThirdRow.getHeading(), shootingPose.getHeading())
+                .setReversed()
+                //.setLinearHeadingInterpolation(finalEndThirdRow.getHeading(), shootingPose.getHeading())
                 .build();
 
-        gateIntakeToShoot = new Path(new BezierLine(gateIntake, shootingPose));
-        gateIntakeToShoot.setLinearHeadingInterpolation(gateIntake.getHeading(), shootingPose.getHeading());
+        gateIntakeToShoot = new Path(new BezierLine(gateIntake2, shootingPose));
+        gateIntakeToShoot.reverseHeadingInterpolation();
+        //gateIntakeToShoot.setLinearHeadingInterpolation(gateIntake.getHeading(), shootingPose.getHeading());
 
         shootToGateIntake = new Path(new BezierLine(shootingPose, gateIntake));
         shootToGateIntake.setLinearHeadingInterpolation(shootingPose.getHeading(), gateIntake.getHeading());
+        shootToGateIntake2 = new Path(new BezierCurve(gateIntake,gateControl, gateIntake2));
+        shootToGateIntake2.setLinearHeadingInterpolation(gateIntake.getHeading(), gateIntake2.getHeading());
 
+        gateIntakeChain = follower.pathBuilder().addPath(shootToGateIntake).addPath(shootToGateIntake2).build();
+        int gateDelay = 800;
         schedule(
                 new RunCommand(() -> follower.update()),
                 new RunCommand(() -> PosePersistency.lastPose = follower.getPose()),
@@ -167,19 +183,24 @@ public class GoalSideAuto extends CommandOpMode {
                         new TransferSequence(intake, gate, turret),
 
                         // Gate intake sequences (unchanged)
-                        new FollowPathCommand(follower, shootToGateIntake),
+
                         new IntakeOn(intake),
-                        new WaitCommand(1500),
-                        new IntakeOff(intake),
+                        new FollowPathCommand(follower, shootToGateIntake),
+                        new IntakeTransfer(intake),
+                        new WaitCommand(gateDelay),
                         new FollowPathCommand(follower, gateIntakeToShoot),
                         new TransferSequence(intake, gate, turret),
 
-                        new FollowPathCommand(follower, shootToGateIntake),
+
                         new IntakeOn(intake),
-                        new WaitCommand(1500),
-                        new IntakeOff(intake),
+                        new FollowPathCommand(follower, shootToGateIntake),
+                        new IntakeTransfer(intake),
+                        new WaitCommand(gateDelay),
                         new FollowPathCommand(follower, gateIntakeToShoot),
                         new TransferSequence(intake, gate, turret),
+
+
+                        new IntakeOn(intake),
 
 
                         new IntakeOn(intake),
@@ -199,8 +220,9 @@ public class GoalSideAuto extends CommandOpMode {
 
     @Override
     public void run() {
-        PosePersistency.lastPose = follower.getPose();
         turret.updateBotPose(follower.getPose());
+        PosePersistency.lastPose = follower.getPose();
+        telemetry.addData("Distance", turret.getDistance());
         telemetry.addData("isBusy", follower.isBusy());
         telemetry.addData("Pose", follower.getPose());
         telemetry.update();
