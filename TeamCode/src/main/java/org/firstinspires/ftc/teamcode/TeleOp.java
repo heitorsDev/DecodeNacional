@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
@@ -10,8 +11,10 @@ import org.firstinspires.ftc.teamcode.Commands.Intake.IntakeOff;
 import org.firstinspires.ftc.teamcode.Commands.Intake.IntakeOn;
 import org.firstinspires.ftc.teamcode.Commands.ResetForSide;
 import org.firstinspires.ftc.teamcode.Commands.TransferSequence;
+import org.firstinspires.ftc.teamcode.Commands.VisionResetOffset;
 import org.firstinspires.ftc.teamcode.Subsystems.Gate.Gate;
 import org.firstinspires.ftc.teamcode.Subsystems.Intake.Intake;
+import org.firstinspires.ftc.teamcode.Subsystems.Turret.RobotDrawer;
 import org.firstinspires.ftc.teamcode.Subsystems.Turret.Turret;
 import org.firstinspires.ftc.teamcode.Subsystems.Turret.TurretConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.Turret.Vision.Vision;
@@ -50,26 +53,28 @@ public class TeleOp extends CommandOpMode {
         gamepadEx.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenInactive(new IntakeOff(intake));
         gamepadEx.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenActive(new TransferSequence(intake, gate, turret));
         gamepadEx.getGamepadButton(GamepadKeys.Button.B).whenActive(new ResetForSide(follower));
-
+        gamepadEx.getGamepadButton(GamepadKeys.Button.START).whenActive(new VisionResetOffset(hardwareMap, turret));
 
         register(turret, gate,intake);
 
         follower.setPose(PosePersistency.lastPose);
 
-
+        telemetry = FtcDashboard.getInstance().getTelemetry();
         follower.startTeleOpDrive();
         
     }
     @Override
-    public void run(){
+    public void run() {
         super.run();
-        follower.setTeleOpDrive(gamepad1.left_stick_y*(PosePersistency.lastSide== TurretConstants.SIDES.RED?-1:1), gamepad1.left_stick_x*(PosePersistency.lastSide== TurretConstants.SIDES.RED?-1:1), -gamepad1.right_stick_x, false);
+        follower.setTeleOpDrive(gamepad1.left_stick_y * (PosePersistency.lastSide == TurretConstants.SIDES.RED ? -1 : 1), gamepad1.left_stick_x * (PosePersistency.lastSide == TurretConstants.SIDES.RED ? -1 : 1), -gamepad1.right_stick_x, false);
         follower.update();
 
 
-
         turret.updateBotPose(follower.getPose());
-
-        telemetry.update();
+        if (isStarted()) {
+            RobotDrawer.draw(follower.getPose(), "#00FF00");
+        }
+            telemetry.addData("blueoff: ", TurretConstants.blueOffset);
+            telemetry.update();
+        }
     }
-}

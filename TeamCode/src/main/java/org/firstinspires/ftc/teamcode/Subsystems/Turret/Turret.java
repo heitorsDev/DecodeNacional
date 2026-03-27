@@ -20,7 +20,11 @@ import org.firstinspires.ftc.teamcode.core.hardware.TauraServo;
 
 @Config
 public class Turret extends SubsystemBase {
-
+    public enum STATES{
+        STATIC,
+        AIM
+    }
+    STATES state = STATES.AIM;
     public static int tuningVelocity = 0;
 
     TauraServo Taura1;
@@ -44,7 +48,7 @@ public class Turret extends SubsystemBase {
     double distance = 0;
     double targetAngleFC = 0;
 
-    PIDController turretController = new PIDController(3, 0, 0);
+    public PIDController turretController = new PIDController(3, 0, 0.09);
     TurretConstants.SIDES side = TurretConstants.SIDES.BLUE;
 
     Telemetry telemetry;
@@ -53,8 +57,6 @@ public class Turret extends SubsystemBase {
     // Init is called explicitly in constructor via RobotDrawer.init()
 
     public Turret(HardwareMap hardwareMap) {
-        // Fix 2: call static init() correctly — sets up the shared FieldManager
-        RobotDrawer.init();
 
         headlight = hardwareMap.get(Servo.class, "headlight");
         telemetry = FtcDashboard.getInstance().getTelemetry();
@@ -65,21 +67,16 @@ public class Turret extends SubsystemBase {
 
         shooter1 = hardwareMap.get(DcMotorEx.class, "shooter1");
         shooter2 = hardwareMap.get(DcMotorEx.class, "shooter2");
+        reinitMotors();
 
-        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(400, 0, 0, 15.5));
-        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(400, 0, 0, 15.5));
-
-        velocityInterpolation.add(minDistance, 770);
-        velocityInterpolation.add(76, 850);
-        velocityInterpolation.add(94, 910);
-        velocityInterpolation.add(108, 960);
-        velocityInterpolation.add(maxDistance, 1050);
+        velocityInterpolation.add(minDistance, 840);
+        velocityInterpolation.add(76, 920);
+        velocityInterpolation.add(94, 990);
+        velocityInterpolation.add(108, 1090);
+        velocityInterpolation.add(maxDistance, 1255);
         velocityInterpolation.createLUT();
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
 
     public void setSide(TurretConstants.SIDES side) {
         this.side = side;
@@ -113,11 +110,15 @@ public class Turret extends SubsystemBase {
     public void reinitMotors() {
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(400, 0, 0, 15.5));
-        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(400, 0, 0, 15.5));
+        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(400, 0, 100, 19.5));
+        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(400, 0, 100, 19.5));
     }
-
+    public void setState(STATES state){
+        this.state = state;
+    }
+    int targetVelocity = 0;
     public void setShooterVelocity(int power) {
+        targetVelocity = power;
         shooter1.setVelocity(power);
         shooter2.setVelocity(power);
     }
@@ -144,10 +145,10 @@ public class Turret extends SubsystemBase {
         RobotDrawer.draw(virtualBotPose, "#E53935"); // virtual pose (red)
         RobotDrawer.draw(poseToAim, "#43A047");      // target goal  (green)
 
-        // Fix 4: always call update() AFTER all draw calls to flush to Panels
-        RobotDrawer.update();
 
         telemetry.addData("Position: ", getTurretAngle());
+        telemetry.addData("BOtpose: ", botPose);
+        telemetry.addData("Virtual botpose: ", virtualBotPose);
         telemetry.addData("Distance: ", distance);
         telemetry.addData("Encoder Shooter1: ", shooter1.getVelocity());
         telemetry.addData("Encoder Shooter2: ", shooter2.getVelocity());
@@ -155,7 +156,14 @@ public class Turret extends SubsystemBase {
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
-
+    public boolean atVelocity(){
+        int tolerance = 50;
+        return Math.abs(this.targetVelocity-shooter1.getVelocity())<tolerance;
+    }
+    public boolean turretStatic(){
+        return turretStatic;
+    }
+    private boolean turretStatic = false;
     private void updateTurret() {
         targetAngleFC = -Math.atan2(poseToAim.getY() - botPose.getY(), poseToAim.getX() - botPose.getX()) + Math.PI;
         double targetAngleRC = normalizeAngle(targetAngleFC + botPose.getHeading());
@@ -166,13 +174,20 @@ public class Turret extends SubsystemBase {
             targetAngleRC += TurretConstants.blueOffset;
         }
 
-        boolean onTarget = targetAngleRC > -Math.toRadians(120)
+        turretStatic = targetAngleRC > -Math.toRadians(120)
                 && targetAngleRC < Math.toRadians(120)
                 && Math.abs(turretController.getPositionError()) < Math.toRadians(10);
 
-        headlight.setPosition(onTarget ? 1 : 0);
+        headlight.setPosition(turretStatic ? 1 : 0);
+        switch (state){
+            case AIM:
+                targetAngleRC = Range.clip(targetAngleRC, -Math.toRadians(120), Math.toRadians(120));
+                break;
+            case STATIC:
+                targetAngleRC = 0;
+                break;
+        }
 
-        targetAngleRC = Range.clip(targetAngleRC, -Math.toRadians(120), Math.toRadians(120));
 
         double currentAngle = getTurretAngle();
         double power = Range.clip(
@@ -190,6 +205,7 @@ public class Turret extends SubsystemBase {
         setShooterVelocity(
                 (int) velocityInterpolation.get(Range.clip(distance, minDistance + 1, maxDistance - 1))
         );
+        //setShooterVelocity(tuningVelocity);
     }
 
     private double normalizeAngle(double angle) {

@@ -1,66 +1,41 @@
 package org.firstinspires.ftc.teamcode.Subsystems.Turret;
 
-import com.bylazar.field.FieldManager;
-import com.bylazar.field.PanelsField;
-import com.bylazar.field.Style;
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.canvas.Canvas;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.math.Vector;
+import com.acmerobotics.dashboard.config.Config;
 
 public class RobotDrawer {
 
-    public static final double ROBOT_RADIUS = 9.0;
-    public static final String DEFAULT_COLOR = "#3F51B5";
+    public static final double ROBOT_RADIUS = 9;
 
-    private final String color;
-    private static FieldManager field;
+    private static final FtcDashboard dashboard = FtcDashboard.getInstance();
 
-    public RobotDrawer(String color) {
-        this.color = color;
-    }
-
-    public RobotDrawer() {
-        this(DEFAULT_COLOR);
-    }
-
-    /** Call once in your OpMode or Subsystem constructor. */
-    public static void init() {
-        field = PanelsField.INSTANCE.getField();
-        field.setOffsets(PanelsField.INSTANCE.getPresets().getPEDRO_PATHING());
-    }
-
-    /** Instance draw — uses this instance's color. */
-    public void draw(Pose pose) {
-        draw(pose, this.color);
-    }
-
-    /** Static draw — use this to draw multiple poses with different colors. */
+    /**
+     * Draw robot on FTC Dashboard field overlay
+     */
     public static void draw(Pose pose, String color) {
-        if (field == null || isInvalid(pose)) return;
+        if (isInvalid(pose)) return;
 
-        Style style = new Style("", color, 0.0);
+        TelemetryPacket packet = new TelemetryPacket();
+        Canvas canvas = packet.fieldOverlay();
 
-        // Draw robot body circle
-        field.setStyle(style);
-        field.moveCursor(pose.getX(), pose.getY());
-        field.circle(ROBOT_RADIUS);
+        double x = pose.getX();
+        double y = pose.getY();
+        double heading = pose.getHeading();
 
-        // Draw heading indicator using getHeadingAsUnitVector() — fixes coordinate system mismatch
-        Vector v = pose.getHeadingAsUnitVector();
-        v.setMagnitude(v.getMagnitude() * ROBOT_RADIUS);
+        // Draw robot body
+        canvas.setStroke(color);
+        canvas.strokeCircle(x, y, ROBOT_RADIUS);
 
-        double x1 = pose.getX() + v.getXComponent() / 2;
-        double y1 = pose.getY() + v.getYComponent() / 2;
-        double x2 = pose.getX() + v.getXComponent();
-        double y2 = pose.getY() + v.getYComponent();
+        // Draw heading line
+        double headingX = x + Math.cos(heading) * ROBOT_RADIUS;
+        double headingY = y + Math.sin(heading) * ROBOT_RADIUS;
 
-        field.setStyle(style);
-        field.moveCursor(x1, y1);
-        field.line(x2, y2);
-    }
+        canvas.strokeLine(x, y, headingX, headingY);
 
-    /** Must be called once per loop AFTER all draw() calls to flush to Panels. */
-    public static void update() {
-        if (field != null) field.update();
+        dashboard.sendTelemetryPacket(packet);
     }
 
     private static boolean isInvalid(Pose pose) {

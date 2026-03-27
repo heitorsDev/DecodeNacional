@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,16 +11,17 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.Subsystems.Intake.Intake;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Config
 @TeleOp(name = "Shooter PIDF Tuning", group = "Tuning")
 public class ShooterTuningTeleop extends LinearOpMode {
 
     // --- Configurable via FTC Dashboard ---
-    public static double PIDF_P = 50;
+    public static double PIDF_P = 0;
     public static double PIDF_I = 0;
     public static double PIDF_D = 0;
-    public static double PIDF_F = 30;
+    public static double PIDF_F = 0;
 
     public static int TARGET_VELOCITY = 0;
 
@@ -30,6 +32,8 @@ public class ShooterTuningTeleop extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        Follower follower = Constants.createFollower(hardwareMap);
+
         Intake intake = new Intake(hardwareMap);
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());

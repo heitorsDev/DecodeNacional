@@ -12,7 +12,7 @@ public class PosePersistency {
     public static TurretConstants.SIDES lastSide = TurretConstants.SIDES.BLUE;
 
 
-    private static final Pose RED_RESET_POSE = new Pose(13.25/2, 17.27/2, Math.toRadians(0));
+    private static final Pose RED_RESET_POSE = new Pose(6.625, 8.635, Math.toRadians(0));
 
     public static Pose getResetPose() {
         if (lastSide == TurretConstants.SIDES.BLUE) {

@@ -13,8 +13,8 @@ public class TurretConstants {
     public static final Pose blueGoalPose = new Pose(0,144,0);
     public static final Pose redGoalPose = blueGoalPose.mirror();
 
-    public static double redOffset = -Math.toRadians(10);
-    public static double blueOffset = Math.toRadians(0);
+    public static double redOffset = -Math.toRadians(7);
+    public static double blueOffset = Math.toRadians(2);
     public static enum SIDES{
         BLUE,
         RED

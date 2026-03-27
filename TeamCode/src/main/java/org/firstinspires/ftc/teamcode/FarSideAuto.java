@@ -11,6 +11,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.RunCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
+import com.seattlesolvers.solverslib.command.WaitCommand;
+import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 
 import org.firstinspires.ftc.teamcode.Commands.Intake.IntakeOff;
@@ -33,9 +35,13 @@ public class FarSideAuto extends CommandOpMode {
     Path startToShoot;
 
     PathChain thirdRowChain;
-    PathChain hpChain;
-
+    Path shootToHP;
+    Path hpToShoot;
+    Path shootToHPGate;
+    Path hpGateToShoot;
     public Pose shootingPose;
+    public Path shootToLeave;
+
 
     @Override
     public void initialize() {
@@ -63,14 +69,17 @@ public class FarSideAuto extends CommandOpMode {
 
         follower = Constants.createFollower(hardwareMap);
 
-        Pose startPose      = new Pose((144 / 2) - (17.5 / 2), 9.5, Math.toRadians(-90));
-        shootingPose        = new Pose(58, 78, Math.toRadians(-170));
+        Pose startPose      = new Pose(61 ,8, Math.toRadians(180));
+        shootingPose        = new Pose(57.5, 22, Math.toRadians(180));
 
         Pose startThirdRow  = new Pose(50, 38, Math.toRadians(190));
-        Pose endThirdRow    = new Pose(14, 38, Math.toRadians(190));
+        Pose endThirdRow    = new Pose(17, 38, Math.toRadians(190));
 
-        Pose hpIntake           = new Pose(9, 9, Math.toRadians(-135));
-        Pose hpControlToIntake  = new Pose(60, 50, 0);
+        Pose hpIntake       = new Pose(10, 7.5, Math.toRadians(190));
+        Pose hpGateIntake   =  new Pose (7, 45, Math.toRadians(90));
+        Pose hpControlToGateIntake = new Pose(5, 2, 0);
+
+        Pose Leave = new Pose(18, 12, Math.toRadians(180));
 
 
         if (side == TurretConstants.SIDES.RED) {
@@ -79,7 +88,9 @@ public class FarSideAuto extends CommandOpMode {
             startThirdRow       = startThirdRow.mirror();
             endThirdRow         = endThirdRow.mirror();
             hpIntake            = hpIntake.mirror();
-            hpControlToIntake   = hpControlToIntake.mirror();
+            hpGateIntake        = hpGateIntake.mirror();
+            hpControlToGateIntake = hpControlToGateIntake.mirror();
+            Leave               = Leave.mirror();
         }
 
         follower.setPose(startPose);
@@ -96,43 +107,74 @@ public class FarSideAuto extends CommandOpMode {
                 .setLinearHeadingInterpolation(endThirdRow.getHeading(), shootingPose.getHeading())
                 .build();
 
-        // Single chain: shoot -> HP intake -> shoot, both legs as Bezier curves
-        hpChain = follower.pathBuilder()
-                .addPath(new BezierCurve(
-                       shootingPose, hpControlToIntake, hpIntake))
-                .addPath(new BezierCurve(
-                        hpIntake,
-                        hpControlToIntake,
-                        shootingPose))
-                .setReversed()
-                .build();
+
+        shootToHP = new Path(new BezierLine(shootingPose, hpIntake));
+        shootToHP.setLinearHeadingInterpolation(shootingPose.getHeading(), hpIntake.getHeading());
+
+        hpToShoot = new Path(new BezierLine(hpIntake, shootingPose));
+        hpToShoot.setLinearHeadingInterpolation(hpIntake.getHeading(), shootingPose.getHeading());
+
+        shootToHPGate = new Path(new BezierCurve(shootingPose, hpControlToGateIntake, hpGateIntake));
+        shootToHPGate.setLinearHeadingInterpolation(shootingPose.getHeading(), hpGateIntake.getHeading());
+
+        hpGateToShoot = new Path(new BezierCurve(hpGateIntake, hpControlToGateIntake, shootingPose));
+        hpGateToShoot.setLinearHeadingInterpolation(hpGateIntake.getHeading(), shootingPose.getHeading());
+
+        shootToLeave = new Path(new BezierLine(shootingPose, Leave));
+        shootToLeave.setLinearHeadingInterpolation(shootingPose.getHeading(), Leave.getHeading());
+
 
         schedule(
                 new RunCommand(() -> follower.update()),
                 new RunCommand(() -> PosePersistency.lastPose = follower.getPose()),
                 new SequentialCommandGroup(
                         new FollowPathCommand(follower, startToShoot),
+                        new WaitUntilCommand(turret::atVelocity),
                         new TransferSequence(intake, gate, turret),
-
+                        /*
                         new IntakeOn(intake),
                         new FollowPathCommand(follower, thirdRowChain),
                         new IntakeOff(intake),
+                        new WaitCommand(300),
+                        new TransferSequence(intake, gate, turret),
+                        */
+                        new IntakeOn(intake),
+                        new FollowPathCommand(follower, shootToHP),
+                        new WaitCommand(500),
+                        new IntakeOff(intake),
+                        new FollowPathCommand(follower, hpToShoot),
+                        new WaitCommand(300),
+                        new TransferSequence(intake, gate, turret),
+                        /*
+                        new IntakeOn(intake),
+                        new FollowPathCommand(follower, shootToHPGate),
+                        new WaitCommand(1000),
+                        new IntakeOff(intake),
+                        new FollowPathCommand(follower, hpGateToShoot),
+                        new WaitCommand(300),
+                        new TransferSequence(intake, gate, turret),
+                        */
+                        new IntakeOn(intake),
+                        new FollowPathCommand(follower, shootToHP),
+                        new WaitCommand(500),
+                        new IntakeOff(intake),
+                        new FollowPathCommand(follower, hpToShoot),
+                        new WaitCommand(300),
+                        new TransferSequence(intake, gate, turret),
+                        new IntakeOn(intake),
+                        new FollowPathCommand(follower, shootToHP),
+                        new WaitCommand(500),
+                        new IntakeOff(intake),
+                        new FollowPathCommand(follower, hpToShoot),
+                        new WaitCommand(300),
                         new TransferSequence(intake, gate, turret),
 
-                        new IntakeOn(intake),
-                        new FollowPathCommand(follower, hpChain),
-                        new IntakeOff(intake),
-                        new TransferSequence(intake, gate, turret),
+                        new FollowPathCommand(follower, shootToLeave)
 
-                        new IntakeOn(intake),
-                        new FollowPathCommand(follower, hpChain),
-                        new IntakeOff(intake),
-                        new TransferSequence(intake, gate, turret),
 
-                        new IntakeOn(intake),
-                        new FollowPathCommand(follower, hpChain),
-                        new IntakeOff(intake),
-                        new TransferSequence(intake, gate, turret)
+
+
+
                 )
         );
 
