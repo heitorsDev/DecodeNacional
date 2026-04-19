@@ -28,7 +28,6 @@ public class TeleOp extends CommandOpMode {
     private Gate gate;
     private Intake intake;
     private Follower follower;
-    private Vision vision;
 
 
     @Override
@@ -44,20 +43,19 @@ public class TeleOp extends CommandOpMode {
         gate = new Gate(hardwareMap);
         intake = new Intake(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
-        vision = new Vision(hardwareMap);
 
         turret.setSide(PosePersistency.lastSide);
-
+        follower.setPose(new Pose(31.7, 144-8.5, Math.toRadians(-90)).mirror());
 
         gamepadEx.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenActive(new IntakeOn(intake));
         gamepadEx.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenInactive(new IntakeOff(intake));
         gamepadEx.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenActive(new TransferSequence(intake, gate, turret));
         gamepadEx.getGamepadButton(GamepadKeys.Button.B).whenActive(new ResetForSide(follower));
-        gamepadEx.getGamepadButton(GamepadKeys.Button.START).whenActive(new VisionResetOffset(hardwareMap, turret));
+
 
         register(turret, gate,intake);
 
-        follower.setPose(PosePersistency.lastPose);
+        //follower.setPose(PosePersistency.lastPose);
 
         telemetry = FtcDashboard.getInstance().getTelemetry();
         follower.startTeleOpDrive();

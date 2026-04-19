@@ -7,6 +7,7 @@ import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -108,6 +109,8 @@ public class Turret extends SubsystemBase {
     }
 
     public void reinitMotors() {
+        shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooter2.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(400, 0, 100, 19.5));
@@ -181,7 +184,7 @@ public class Turret extends SubsystemBase {
         headlight.setPosition(turretStatic ? 1 : 0);
         switch (state){
             case AIM:
-                targetAngleRC = Range.clip(targetAngleRC, -Math.toRadians(120), Math.toRadians(120));
+                targetAngleRC =Range.clip(targetAngleRC, -Math.toRadians(120), Math.toRadians(120));
                 break;
             case STATIC:
                 targetAngleRC = 0;

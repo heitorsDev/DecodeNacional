@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.Turret.TurretConstants;
 public class PosePersistency {
     public static Turret turret = null;
     public static Pose lastPose = new Pose(0,0,0);
-    public static TurretConstants.SIDES lastSide = TurretConstants.SIDES.BLUE;
+    public static TurretConstants.SIDES lastSide = TurretConstants.SIDES.RED;
 
 
     private static final Pose RED_RESET_POSE = new Pose(6.625, 8.635, Math.toRadians(0));
